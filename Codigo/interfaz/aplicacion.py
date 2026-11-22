@@ -1,7 +1,6 @@
 """Conecta los paneles con las operaciones; no contiene fórmulas ni SCPI."""
 
 import tkinter as tk
-from pathlib import Path
 from tkinter import font, ttk
 
 import calibracion
@@ -9,6 +8,7 @@ import instrumentos_usb
 import operaciones
 from cancelacion import Cancelado
 from configuracion import Configuracion, cargar_configuracion, guardar_configuracion
+from entorno import ES_WINDOWS, recurso
 
 from interfaz.barrido import PanelBarrido
 from interfaz.calibracion import PanelCalibracion
@@ -27,11 +27,13 @@ class Aplicacion:
         self.usar = tk.BooleanVar(root, value=False)
         root.title('Analizador de Impedancias LC Complejas')
         # Usar el mismo símbolo en la ventana y en el acceso del escritorio.
-        ruta_icono = Path(__file__).resolve().parents[2] / 'recursos' / 'utn-fondo-blanco.png'
+        ruta_icono = recurso('utn-fondo-blanco.png')
         imagen = tk.PhotoImage(file=str(ruta_icono))
         escala = max(1, (max(imagen.width(), imagen.height()) + 63) // 64)
         self.icono = imagen.subsample(escala)
         root.iconphoto(True, self.icono)
+        if ES_WINDOWS:
+            root.iconbitmap(default=str(recurso('utn-fondo-blanco.ico')))
         root.geometry(
             f'{min(1200, root.winfo_screenwidth() - 80)}x{min(880, root.winfo_screenheight() - 100)}'
         )
@@ -156,6 +158,9 @@ class Aplicacion:
             return instrumentos_usb.habilitar_permisos(self.hardware.equipos)
 
         def terminado(resultado):
+            if resultado.get('mensaje'):
+                self.informar(resultado['mensaje'])
+                return
             if not resultado['exito']:
                 self.informar(resultado['error'])
                 return

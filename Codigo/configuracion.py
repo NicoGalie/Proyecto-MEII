@@ -2,11 +2,11 @@
 
 import math
 from dataclasses import dataclass
-from pathlib import Path
 
+from entorno import directorio_datos
 from persistencia import cargar_json, guardar_json
 
-DATOS = Path(__file__).resolve().parent.parent / 'datos'
+DATOS = directorio_datos()
 RUTA_CONFIGURACION = DATOS / 'circuito-ina128p.json'
 
 

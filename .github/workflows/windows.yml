@@ -1,0 +1,61 @@
+name: Windows x64
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Codigo/**'
+      - 'recursos/**'
+      - 'windows/**'
+      - 'requirements.txt'
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-portable
+  cancel-in-progress: false
+
+jobs:
+  compilar:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.12'
+          architecture: x64
+          cache: pip
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt PyInstaller==6.22.3
+      - name: Compilar aplicacion
+        run: python windows/compilar.py
+      - name: Verificar apertura del ejecutable
+        shell: pwsh
+        run: |
+          $proceso = Start-Process -FilePath '.\dist\AnalizadorImpedanciasLC\AnalizadorImpedanciasLC.exe' -PassThru
+          try {
+            if (!$proceso.WaitForInputIdle(20000)) { throw 'La ventana no termino de iniciar.' }
+            Start-Sleep -Seconds 3
+            $proceso.Refresh()
+            if ($proceso.HasExited) { throw 'El programa se cerro al iniciar.' }
+            if ($proceso.MainWindowTitle -ne 'Analizador de Impedancias LC Complejas') {
+              throw "No se encontro la ventana principal: $($proceso.MainWindowTitle)"
+            }
+          } finally {
+            if (!$proceso.HasExited) {
+              $null = $proceso.CloseMainWindow()
+              if (!$proceso.WaitForExit(10000)) { Stop-Process -Id $proceso.Id }
+            }
+          }
+      - name: Publicar descarga Windows
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "windows-$env:GITHUB_RUN_NUMBER"
+          $notas = 'Aplicacion para Windows x64. Descomprimir la carpeta completa y abrir AnalizadorImpedanciasLC.exe. No requiere instalar Python. Para los instrumentos USB se necesita un controlador VISA de 64 bits con soporte USBTMC.'
+          gh release create $tag 'dist/Analizador_Impedancias_LC_Complejas_Windows_x64.zip' 'dist/Analizador_Impedancias_LC_Complejas_Windows_x64.zip.sha256' --target $env:GITHUB_SHA --title 'Analizador de Impedancias LC Complejas - Windows x64' --notes $notas --latest

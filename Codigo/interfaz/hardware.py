@@ -1,12 +1,12 @@
 """Configuración física y detección USB, actualizada solo por el usuario."""
 
 import tkinter as tk
-from pathlib import Path
 from tkinter import ttk
 
 from PIL import Image, ImageTk
 
 from configuracion import Configuracion, leer_rg
+from entorno import ES_WINDOWS, recurso
 
 from interfaz.comunes import bloquear, entrada, numero
 
@@ -49,11 +49,14 @@ class PanelHardware(ttk.LabelFrame):
         self.actualizar = ttk.Button(acciones, text='Actualizar equipos', command=actualizar)
         self.actualizar.pack(side='left')
         self.permisos = ttk.Button(
-            acciones, text='Habilitar acceso USB', command=permisos, state='disabled'
+            acciones,
+            text='Instalar VISA' if ES_WINDOWS else 'Habilitar acceso USB',
+            command=permisos,
+            state='normal' if ES_WINDOWS else 'disabled',
         )
         self.permisos.pack(side='left', padx=8)
 
-        ruta_circuito = Path(__file__).resolve().parents[2] / 'recursos' / 'circuito-lc.png'
+        ruta_circuito = recurso('circuito-lc.png')
         with Image.open(ruta_circuito) as imagen:
             self.circuito_fuente = imagen.convert('RGB')
         self.circuito_original = tk.PhotoImage(master=self, file=str(ruta_circuito))
@@ -109,7 +112,9 @@ class PanelHardware(ttk.LabelFrame):
     def bloquear(self, ocupado):
         bloquear([self.rs, self.rg, self.guardar, self.chk_cal, self.actualizar], ocupado)
         faltan = any(e['estado'] == 'sin_permisos' for e in self.equipos)
-        self.permisos.configure(state='normal' if faltan and not ocupado else 'disabled')
+        self.permisos.configure(
+            state='normal' if (ES_WINDOWS or faltan) and not ocupado else 'disabled'
+        )
 
     def mostrar_equipos(self, resultado):
         if not resultado['exito']:

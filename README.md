@@ -2,12 +2,15 @@
 
 **Aplicación de escritorio para la medición de impedancias complejas.**
 
-## Descargar la versión final
+## Descargar el programa
+
+**[Descargar para Windows x64](https://github.com/NicoGalie/Proyecto-MEII/releases/latest/download/Analizador_Impedancias_LC_Complejas_Windows_x64.zip)**
 
 **[Descargar la versión final en ZIP](https://github.com/NicoGalie/Proyecto-MEII/raw/refs/heads/main/descargas/Analizador_Impedancias_LC_Complejas_FINAL.zip)**
 
-El ZIP contiene el código Python, los recursos y las instrucciones de esta
-aplicación. La instalación se realiza siguiendo los pasos de este documento.
+El paquete Windows incluye el ejecutable y sus dependencias; no requiere
+instalar Python. El ZIP de código contiene la misma aplicación para ejecutarla
+desde Python en Windows o Linux.
 También se puede descargar el programa mediante Git:
 
 ```bash
@@ -31,9 +34,38 @@ superior y se amplía al hacer clic. El ícono tiene fondo blanco.
 
 ## Instalación y ejecución
 
-La plataforma documentada es **Linux, con Python 3.12 y una sesión gráfica**.
-Tkinter y la biblioteca del sistema libusb deben estar instalados. En
-Debian/Ubuntu/Linux Mint:
+### Windows x64
+
+1. Descargar el paquete Windows y descomprimir la carpeta completa.
+2. Para comunicar los instrumentos, instalar
+   [NI-VISA de 64 bits](https://www.ni.com/en/support/downloads/drivers/download.ni-visa.html)
+   con soporte USBTMC. El controlador se instala por separado del programa.
+3. Abrir `AnalizadorImpedanciasLC.exe`. La carpeta `_internal` debe permanecer
+   junto al ejecutable.
+4. Conectar el generador y el osciloscopio y pulsar **Actualizar equipos**.
+
+El paquete está destinado a Windows 10/11 de 64 bits. La aplicación puede abrirse
+sin instrumentos y sin VISA; el controlador se necesita al detectar o medir.
+El botón **Instalar VISA** abre la descarga oficial del controlador. La
+comunicación utiliza una biblioteca IVI-VISA de 64 bits, como NI-VISA; no utiliza
+las reglas de permisos de Linux.
+
+Para crear el acceso de escritorio con el ícono blanco, ejecutar
+`Crear_acceso_directo.cmd` dentro de la carpeta descomprimida. Si se mueve esa
+carpeta, se debe volver a crear el acceso.
+
+Para ejecutar el código directamente en Windows con Python 3.12 de 64 bits:
+
+```bat
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+iniciar.bat
+```
+
+### Linux
+
+Se requiere **Python 3.12 y una sesión gráfica**, junto con Tkinter y la
+biblioteca del sistema libusb. En Debian/Ubuntu/Linux Mint:
 
 ```bash
 sudo apt install python3 python3-venv python3-tk libusb-1.0-0
@@ -51,7 +83,7 @@ NumPy para el procesamiento numérico; PyVISA y PyVISA-py para la comunicación;
 PyUSB/libusb para USB; Pillow para redimensionar el esquema sin deformarlo;
 PySerial, psutil y zeroconf para los recursos del backend VISA.
 
-### Acceso directo con ícono blanco
+### Acceso directo en Linux
 
 Después de instalar el entorno, ejecutá:
 
@@ -80,7 +112,8 @@ el comando de frecuencia de esa familia. Esto describe los protocolos
 implementados; cada combinación física requiere comprobar sus respuestas SCPI.
 
 Conectá un solo osciloscopio y un solo generador. Pulsá **Actualizar equipos**.
-Si falta acceso, **Habilitar acceso USB** solicita autorización de Linux para
+En Windows, los instrumentos deben ser reconocidos por el controlador VISA.
+En Linux, si falta acceso, **Habilitar acceso USB** solicita autorización para
 instalar reglas udev únicamente para los instrumentos USBTMC seleccionados y
 conectados. Después, actualizá la lista nuevamente. Esa función requiere
 `pkexec`, `udevadm` y el entorno de permisos de Linux.
@@ -262,6 +295,8 @@ de escalas o de configuración horizontal.
 |---|---|
 | [Codigo/Interfaz.py](Codigo/Interfaz.py) | Punto de entrada; no abre ventanas al importarlo |
 | [Codigo/configuracion.py](Codigo/configuracion.py) | Rs, RG, ganancia nominal y configuración persistente |
+| [Codigo/entorno.py](Codigo/entorno.py) | Rutas de recursos y datos según el sistema y el ejecutable |
+| [Codigo/visa_backend.py](Codigo/visa_backend.py) | Selección de IVI-VISA en Windows y PyVISA-py en Linux |
 | [Codigo/modelos.py](Codigo/modelos.py) | Dataclasses de lectura, ajuste, medición y resultados |
 | [Codigo/calculos.py](Codigo/calculos.py) | Impedancia compleja y equivalente serie |
 | [Codigo/calibracion.py](Codigo/calibracion.py) | Creación, validación, selección e interpolación del perfil |
@@ -269,16 +304,19 @@ de escalas o de configuración horizontal.
 | [Codigo/instrumentos.py](Codigo/instrumentos.py) | Sesión VISA y coordinación del generador/osciloscopio |
 | [Codigo/osciloscopios.py](Codigo/osciloscopios.py) | Protocolos SCPI y adquisición por familia |
 | [Codigo/analisis_senoidal.py](Codigo/analisis_senoidal.py) | Ajuste numérico de las capturas |
-| [Codigo/instrumentos_usb.py](Codigo/instrumentos_usb.py) | Enumeración USB y solicitud de permisos |
+| [Codigo/instrumentos_usb.py](Codigo/instrumentos_usb.py) | Detección USB mediante VISA en Windows y sysfs en Linux |
 | [Codigo/cancelacion.py](Codigo/cancelacion.py) | Cancelación cooperativa |
 | [Codigo/persistencia.py](Codigo/persistencia.py) | Lectura JSON y escritura atómica |
 | [Codigo/interfaz/](Codigo/interfaz/) | Ventana, paneles, tablas y trabajador |
 | [linux/](linux/) | Reglas USB y creación del acceso directo |
+| [windows/](windows/) | Construcción del ejecutable y creación del acceso directo |
 | [recursos/](recursos/) | Esquema e íconos |
 
 ## Datos persistentes
 
-Los archivos se crean dentro de `datos/`, relativo al proyecto:
+En Linux, los archivos se crean dentro de `datos/`, relativo al proyecto.
+En Windows se guardan en `%LOCALAPPDATA%\AnalizadorImpedanciasLC\datos`,
+independientemente de dónde se descomprima el ejecutable:
 
 - `circuito-ina128p.json`: Rs y RG guardadas.
 - `calibracion-ina128p.json`: perfil de calibración de ganancia y fase, con

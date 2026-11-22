@@ -4,3 +4,6 @@
 *.md text eol=lf
 *.png binary
 *.zip binary
+*.ico binary
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -3,10 +3,10 @@
 import math
 from contextlib import contextmanager
 
-import pyvisa
 from cancelacion import Cancelado
 from modelos import Lectura
 from osciloscopios import Osciloscopio, protocolo_para, validar_tiempo_promedio
+from visa_backend import crear_gestor
 
 
 def leer_numero(recurso, comando, control, max_reintentos=5):
@@ -72,7 +72,7 @@ class Sesion:
 def conectar(control):
     """Una sesión posee todos los recursos y los libera incluso al cancelar."""
     control.comprobar()
-    rm = pyvisa.ResourceManager('@py')
+    rm = crear_gestor()
     recursos, osciloscopios, generadores, errores = [], [], [], []
     try:
         for direccion in rm.list_resources('USB?*::INSTR'):

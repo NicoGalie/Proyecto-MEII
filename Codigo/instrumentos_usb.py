@@ -1,10 +1,14 @@
-"""Detección USB sin privilegios y autorización mediante la ventana de Linux."""
+"""Detección USBTMC por sysfs en Linux y mediante VISA en Windows."""
 
 import os
 import subprocess
+import webbrowser
 from pathlib import Path
 
-import pyvisa
+from pyvisa import rname
+
+from entorno import ES_WINDOWS
+from visa_backend import VISA_WINDOWS_URL, crear_gestor
 
 SYSFS_USB = Path('/sys/bus/usb/devices')
 DEV_USB = Path('/dev/bus/usb')
@@ -68,6 +72,8 @@ def _enumerar_usb():
 
 def detectar_instrumentos(actualizar=False):
     """Consulta *IDN? solo en conexiones nuevas con acceso, sin interferir al medir."""
+    if ES_WINDOWS:
+        return _detectar_windows()
     try:
         equipos = _enumerar_usb()
     except OSError as error:
@@ -84,7 +90,7 @@ def detectar_instrumentos(actualizar=False):
             if equipo['clave'] not in _identificaciones:
                 try:
                     if rm is None:
-                        rm = pyvisa.ResourceManager('@py')
+                        rm = crear_gestor()
                     with rm.open_resource(equipo['direccion']) as inst:
                         inst.timeout = 1500
                         inst.write_termination = '\n'
@@ -105,7 +111,53 @@ def detectar_instrumentos(actualizar=False):
     return {'exito': True, 'equipos': equipos}
 
 
+def _detectar_windows():
+    equipos = []
+    try:
+        with crear_gestor() as gestor:
+            for direccion in gestor.list_resources('USB?*::INSTR'):
+                datos = rname.parse_resource_name(direccion)
+                equipo = dict(
+                    clave=direccion,
+                    vendor=f'{int(datos.manufacturer_id, 0):04x}',
+                    producto=f'{int(datos.model_code, 0):04x}',
+                    nombre='Instrumento USB',
+                    serie=datos.serial_number,
+                    direccion=direccion,
+                    estado='conectado',
+                )
+                try:
+                    with gestor.open_resource(direccion) as instrumento:
+                        instrumento.timeout = 1500
+                        instrumento.write_termination = instrumento.read_termination = '\n'
+                        identidad = instrumento.query('*IDN?').strip()
+                    partes = [p.strip() for p in identidad.split(',')]
+                    if len(partes) < 2 or not partes[0] or not partes[1]:
+                        raise ValueError('El instrumento no devolvió una identificación válida.')
+                    equipo['nombre'] = ' '.join(partes[:2])
+                    if len(partes) > 2 and partes[2]:
+                        equipo['serie'] = partes[2]
+                except Exception as error:
+                    equipo.update(estado='sin_respuesta', error=str(error))
+                equipos.append(equipo)
+    except Exception as error:
+        return dict(exito=False, error=f'No se pudo detectar el USB: {error}')
+    return dict(exito=True, equipos=equipos)
+
+
 def habilitar_permisos(equipos):
+    if ES_WINDOWS:
+        try:
+            abierto = webbrowser.open(VISA_WINDOWS_URL)
+        except OSError:
+            abierto = False
+        if not abierto:
+            return dict(exito=False, error=f'Abrí esta página para instalar VISA: {VISA_WINDOWS_URL}')
+        return dict(
+            exito=True,
+            mensaje='Se abrió la descarga de NI-VISA. Instalá el controlador de 64 bits '
+            'con soporte USB y después reiniciá el programa.',
+        )
     pares = sorted(
         {
             f'{equipo["vendor"]}:{equipo["producto"]}'
