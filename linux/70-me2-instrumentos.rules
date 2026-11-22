@@ -1,0 +1,3 @@
+# Acceso para el usuario de la sesión y el grupo plugdev, solo a estos equipos.
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="5656", ATTR{idProduct}=="0832", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="6656", ATTR{idProduct}=="0834", MODE="0660", GROUP="plugdev", TAG+="uaccess"

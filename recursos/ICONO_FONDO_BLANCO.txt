@@ -1,0 +1,5 @@
+Ícono UTN con fondo blanco
+Herramienta integrada image_gen; edición del ícono existente.
+Archivo: utn-fondo-blanco.png
+
+Prompt: Use case: precise-object-edit. Asset type: desktop application icon, square PNG. Edit target: the supplied black UTN symbol with transparent background (utn.png). Change ONLY the transparent background to a solid opaque pure white (#FFFFFF) background. Preserve the existing black UTN symbol silhouette, orientation, proportions, symmetry, thickness, and placement exactly. The icon must show the entire unchanged symbol centered, with a small clean white margin. No gray checkerboard, transparency, text, shadows, gradients, borders, or decorative additions.

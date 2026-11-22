@@ -1,0 +1,8 @@
+Analizador de Impedancias LC Complejas
+VERSIÓN FINAL — 22 de noviembre de 2026
+
+Esta es la aplicación principal de la rama main.
+Instalación, uso, modelo matemático y arquitectura: README.md.
+La versión inicial del repositorio se conserva en original/.
+Los datos de configuración y calibración se generan en datos/ y no se distribuyen.
+El ZIP final se regenera con: python3 herramientas/empaquetar_final.py
