@@ -4,4 +4,3 @@
 *.md text eol=lf
 *.png binary
 *.zip binary
-original/Codigo/** -text -whitespace

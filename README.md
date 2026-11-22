@@ -1,26 +1,21 @@
 # Analizador de Impedancias LC Complejas
 
-**Versión final del proyecto — código principal en la rama `main`.**
+**Aplicación de escritorio para la medición de impedancias complejas.**
 
 ## Descargar la versión final
 
 **[Descargar la versión final en ZIP](https://github.com/NicoGalie/Proyecto-MEII/raw/refs/heads/main/descargas/Analizador_Impedancias_LC_Complejas_FINAL.zip)**
 
-El ZIP contiene el código Python, recursos, documentación y pruebas de esta
-versión. No incluye el entorno virtual ni calibraciones de una computadora
-particular. Se instala siguiendo las instrucciones de abajo.
-
-El [programa original](original/) se conserva por separado y sin modificar.
-La rama [`Lucas`](https://github.com/NicoGalie/Proyecto-MEII/tree/Lucas) conserva
-su contenido anterior. Para usar la versión final, descargá el ZIP anterior o
-cloná `main`:
+El ZIP contiene el código Python, los recursos y las instrucciones de esta
+aplicación. La instalación se realiza siguiendo los pasos de este documento.
+También se puede descargar el programa mediante Git:
 
 ```bash
 git clone --branch main https://github.com/NicoGalie/Proyecto-MEII.git
 cd Proyecto-MEII
 ```
 
-![Interfaz de la versión final](docs/vista-previa.png)
+![Interfaz del programa](recursos/vista-previa.png)
 
 ## Qué hace el programa
 
@@ -172,7 +167,8 @@ un error o cancelación se conserva el perfil anterior.
 
 ### Compensación opcional de circuito abierto
 
-El perfil versión 2 añade un residual complejo. Se define la relación:
+La compensación de circuito abierto incorpora un residual complejo. Se define
+la relación:
 
 $$m=\frac{V_o}{V_Z}e^{-j\varphi}=\frac{A}{Z_x}+h$$
 
@@ -279,63 +275,18 @@ de escalas o de configuración horizontal.
 | [Codigo/interfaz/](Codigo/interfaz/) | Ventana, paneles, tablas y trabajador |
 | [linux/](linux/) | Reglas USB y creación del acceso directo |
 | [recursos/](recursos/) | Esquema e íconos |
-| [tests/](tests/) | Pruebas numéricas, SCPI simulado y widgets reales Tk |
-| [ejemplos/](ejemplos/) | Ejemplo numérico sin instrumentos |
-| [docs/](docs/) | Vista previa y guía detallada de lectura del código |
-| [original/](original/) | Código inicial conservado; separado de la aplicación final |
-| [descargas/](descargas/) | Paquete descargable de la versión final y suma SHA-256 |
 
 ## Datos persistentes
 
 Los archivos se crean dentro de `datos/`, relativo al proyecto:
 
 - `circuito-ina128p.json`: Rs y RG guardadas.
-- `calibracion-ina128p.json`: perfil de calibración, compatible con versiones 1 y 2.
+- `calibracion-ina128p.json`: perfil de calibración de ganancia y fase, con
+  compensación opcional del residual.
 
-Los identificadores internos mantienen esos nombres por compatibilidad con el
-formato existente. `datos/` está excluida de Git: cada montaje debe generar su
-propia calibración. La escritura usa un archivo temporal en la misma carpeta y
-`os.replace`, para reemplazar el perfil de forma atómica. Una calibración
+Cada montaje debe generar su propia calibración. La carpeta `datos/` se crea
+al guardar la configuración o un perfil y no forma parte de la descarga.
+La escritura usa un archivo temporal en la misma carpeta y `os.replace`,
+para reemplazar el perfil de forma atómica. Una calibración
 cancelada o inválida no sobrescribe el archivo anterior. Al abrir, la aplicación
 puede cargar el perfil guardado, pero «Usar calibración» comienza desmarcado.
-
-## Pruebas y ejemplo sin instrumentos
-
-Desde la raíz, con el entorno instalado:
-
-```bash
-PYTHONPATH=Codigo:tests .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python ejemplos/medicion_paso_a_paso.py
-```
-
-Las pruebas de interfaz necesitan una sesión gráfica. En Linux sin pantalla
-se pueden ejecutar bajo Xvfb, si está instalado:
-
-```bash
-xvfb-run -a env PYTHONPATH=Codigo:tests .venv/bin/python -m unittest discover -s tests -v
-```
-
-La suite contiene **44 pruebas**, con lecturas e instrumentos simulados. Cubre
-R/L/C, calibración con y sin residual, interpolación, descarte del perfil,
-adquisición senoidal, frecuencia, reintentos, cancelación, persistencia, permisos
-USB e interfaz. No sustituye la verificación metrológica con instrumentos y
-componentes físicos. La [guía paso a paso](docs/GUIA_PASO_A_PASO.md) desarrolla
-el recorrido del código para su estudio y presentación.
-
-## Conservación del original y actualización de la descarga
-
-`original/Codigo/` conserva los archivos del `main` inicial, commit
-`03d21e88dad6539eeab2453c20b19680413ed4e5`. Sus contenidos no se mezclan con
-`Codigo/`, que corresponde a la versión final. El historial anterior y la rama
-`Lucas` se mantienen disponibles.
-
-Para regenerar el ZIP después de un cambio deliberado en la versión final:
-
-```bash
-python3 herramientas/empaquetar_final.py
-```
-
-El empaquetador incluye solo la aplicación final, sus recursos, pruebas y
-documentación; excluye `original/`, `.git`, `.venv`, cachés y datos de usuario.
-También actualiza `descargas/SHA256SUMS`. La descarga corresponde al código de
-esta rama; debe regenerarse antes de publicar una nueva revisión.
